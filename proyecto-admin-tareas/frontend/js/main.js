@@ -1,26 +1,68 @@
+/**
+ * ===============================================
+ * MÓDULO PRINCIPAL - TaskManagerApp
+ * ===============================================
+ * 
+ * Descripción:
+ *   Clase principal que gestiona toda la aplicación.
+ *   Coordina la inicialización, autenticación,
+ *   navegación y operaciones CRUD de tareas.
+ * 
+ * Funcionalidades:
+ *   - Autenticación de usuarios
+ *   - Carga condicional (login vs app)
+ *   - Gestión de vistas (dashboard, tareas, usuarios)
+ *   - Manejo de eventos globales
+ *   - Sincronización de datos
+ *   - Control de roles y permisos
+ * 
+ * Componentes Dependientes:
+ *   - class AuthManager (auth.js)
+ *   - class StorageManager (storage.js)
+ *   - class DOMManager (dom.js)
+ */
+
 class TaskManagerApp {
   constructor() {
     console.log('🚀 Inicializando TaskManager...');
     this.init();
   }
 
+  /**
+   * init()
+   * Inicialización de la aplicación
+   * Verifica autenticación y carga la vista correspondiente
+   */
   init() {
+    // Si ya existe sesión, carga la app, sino muestra login
     if (auth.isAuthenticated()) {
       this.loadAuthenticatedApp();
     } else {
       this.loadLoginScreen();
     }
 
+    // Configura todos los listeners de eventos
     this.setupEventListeners();
 
     console.log('✓ Aplicación inicializada');
   }
 
+  /**
+   * loadLoginScreen()
+   * Carga y muestra la pantalla de inicio de sesión
+   */
   loadLoginScreen() {
     dom.showLoginScreen();
     console.log('📋 Pantalla de login cargada');
   }
 
+  /**
+   * loadAuthenticatedApp()
+   * Carga la aplicación principal para usuario autenticado
+   * - Obtiene información del usuario
+   * - Muestra elementos según permisos
+   * - Carga dashboard
+   */
   loadAuthenticatedApp() {
     dom.showApp();
     
@@ -232,18 +274,27 @@ class TaskManagerApp {
     });
   }
 
+  /**
+   * handleLogin()
+   * Procesa el inicio de sesión de un usuario
+   * Valida credenciales y carga la aplicación
+   */
   handleLogin() {
+    // Obtiene valores del formulario
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
 
+    // Valida que ambos campos tengan contenido
     if (!username || !password) {
       dom.showNotification('Usuario y contraseña son requeridos', 'error');
       return;
     }
 
     try {
+      // Intenta autenticar el usuario
       auth.login(username, password);
       dom.showNotification(`✓ Bienvenido ${username}`, 'success');
+      // Carga la aplicación completamente
       this.loadAuthenticatedApp();
     } catch (error) {
       console.error('Error en login:', error.message);
@@ -251,19 +302,35 @@ class TaskManagerApp {
     }
   }
 
+  /**
+   * handleLogout()
+   * Procesa el cierre de sesión
+   * Confirma con el usuario y limpia la aplicación
+   */
   handleLogout() {
+    // Confirma la acción del usuario
     if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+      // Cierra la sesión
       auth.logout();
       dom.showNotification('✓ Sesión cerrada', 'info');
+      // Limpia interfaz
       dom.tasksList.innerHTML = '';
       dom.hideTaskForm();
+      // Vuelve a login
       this.loadLoginScreen();
     }
   }
 
+  /**
+   * handleSaveTask()
+   * Procesa la creación o actualización de una tarea
+   * Valida datos y persiste en almacenamiento
+   */
   handleSaveTask() {
+    // Obtiene datos del formulario
     const formData = dom.getTaskFormData();
 
+    // Valida campos requeridos
     if (!formData.title.trim() || !formData.due_date) {
       dom.showNotification('Todos los campos son requeridos', 'error');
       return;
@@ -272,6 +339,7 @@ class TaskManagerApp {
     try {
       const userId = auth.getCurrentUser().userId;
 
+      // Si tiene ID, es actualización; si no, es creación
       if (formData.id) {
         auth.requirePermiso('editar_mi_tarea');
         const tarea = storage.getTareaById(parseInt(formData.id));

@@ -1,5 +1,39 @@
+/**
+ * ===============================================
+ * MÓDULO DE ALMACENAMIENTO - StorageManager
+ * ===============================================
+ * 
+ * Descripción:
+ *   Gestor de datos persistente usando localStorage.
+ *   Maneja usuarios, tareas y sesiones.
+ *   Proporciona métodos CRUD para todas las entidades.
+ * 
+ * Funcionalidades:
+ *   - Almacenamiento de usuarios y tareas
+ *   - Gestión de sesión del usuario actual
+ *   - CRUD de tareas (crear, leer, actualizar, eliminar)
+ *   - CRUD de usuarios (admin)
+ *   - Cálculo de estadísticas
+ *   - Sistema de eventos (emit/on)
+ *   - Filtrado y búsqueda de tareas
+ *   - Validaciones de datos
+ * 
+ * Datos Almacenados:
+ *   - USUARIOS: datos de todos los usuarios
+ *   - TAREAS: todas las tareas del sistema
+ *   - USER_SESSION: sesión actual del usuario
+ * 
+ * Datos de Ejemplo Incluidos:
+ *   - 3 usuarios de prueba (admin, juan_perez, maria_garcia)
+ *   - 5 tareas de ejemplo
+ */
+
 class StorageManager {
   constructor() {
+    /**
+     * Claves de almacenamiento en localStorage
+     * Cada clave sin prefijo genera un nombre único
+     */
     this.STORAGE_KEYS = {
       USUARIOS: 'tareas_app_usuarios',
       TAREAS: 'tareas_app_tareas',
@@ -169,11 +203,22 @@ class StorageManager {
   }
 
 
+  /**
+   * getAllTareas()
+   * Obtiene todas las tareas del almacenamiento
+   * @returns {Array} - Array de tareas
+   */
   getAllTareas() {
     const data = localStorage.getItem(this.STORAGE_KEYS.TAREAS);
     return data ? JSON.parse(data) : [];
   }
 
+  /**
+   * getTareasByUsuario(userId)
+   * Obtiene todas las tareas de un usuario específico
+   * @param {number} userId - ID del usuario
+   * @returns {Array} - Array de tareas del usuario
+   */
   getTareasByUsuario(userId) {
     const tareas = this.getAllTareas();
     return tareas.filter(t => t.user_id === userId);
@@ -184,12 +229,20 @@ class StorageManager {
     return tareas.find(t => t.id === id) || null;
   }
 
+  /**
+   * createTarea(tareaData)
+   * Crea una nueva tarea
+   * @param {Object} tareaData - Datos de la tarea
+   * @returns {Object} - Tarea creada
+   * @throws {Error} - Si la fecha es pasada o hay validación error
+   */
   createTarea(tareaData) {
     const tareas = this.getAllTareas();
 
     const now = new Date();
     const dueDate = new Date(tareaData.due_date);
 
+    // Valida que la fecha de vencimiento no sea en el pasado
     if (dueDate < now) {
       throw new Error('La fecha de vencimiento no puede ser en el pasado');
     }
@@ -211,6 +264,14 @@ class StorageManager {
     return nuevaTarea;
   }
 
+  /**
+   * updateTarea(id, actualizaciones)
+   * Actualiza una tarea existente
+   * @param {number} id - ID de la tarea a actualizar
+   * @param {Object} actualizaciones - Campos a actualizar
+   * @returns {Object} - Tarea actualizada
+   * @throws {Error} - Si la tarea no existe
+   */
   updateTarea(id, actualizaciones) {
     const tareas = this.getAllTareas();
     const index = tareas.findIndex(t => t.id === id);
@@ -219,16 +280,26 @@ class StorageManager {
       throw new Error('Tarea no encontrada');
     }
 
+    // Fusiona los datos existentes con las actualizaciones
     const tareaActualizada = { ...tareas[index], ...actualizaciones };
     tareas[index] = tareaActualizada;
 
+    // Persiste cambios
     localStorage.setItem(this.STORAGE_KEYS.TAREAS, JSON.stringify(tareas));
 
+    // Emite evento de actualización
     this.emit('tarea:actualizada', tareaActualizada);
 
     return tareaActualizada;
   }
 
+  /**
+   * deleteTarea(id)
+   * Elimina una tarea del sistema
+   * @param {number} id - ID de la tarea a eliminar
+   * @returns {boolean} - true si se eliminó correctamente
+   * @throws {Error} - Si la tarea no existe
+   */
   deleteTarea(id) {
     const tareas = this.getAllTareas();
     const index = tareas.findIndex(t => t.id === id);
@@ -246,7 +317,16 @@ class StorageManager {
   }
 
 
+  /**
+   * loginUsuario(username, password)
+   * Autentica un usuario y crea una sesión
+   * @param {string} username - Nombre de usuario
+   * @param {string} password - Contraseña
+   * @returns {Object} - Objeto de sesión
+   * @throws {Error} - Si credenciales son inválidas
+   */
   loginUsuario(username, password) {
+    // Busca el usuario por nombre de usuario
     const usuario = this.getUsuarioByUsername(username);
 
     if (!usuario) {
@@ -257,6 +337,7 @@ class StorageManager {
       throw new Error('Contraseña incorrecta');
     }
 
+    // Crea objeto de sesión con información del usuario
     const session = {
       userId: usuario.id,
       username: usuario.username,
@@ -264,6 +345,7 @@ class StorageManager {
       loginTime: new Date().toISOString()
     };
 
+    // Persiste la sesión en localStorage
     localStorage.setItem(this.STORAGE_KEYS.USER_SESSION, JSON.stringify(session));
 
     this.emit('usuario:loginExitoso', session);
@@ -271,6 +353,11 @@ class StorageManager {
     return session;
   }
 
+  /**
+   * getCurrentSession()
+   * Obtiene la sesión actual del usuario desde localStorage
+   * @returns {Object|null} - Objeto de sesión o null si no hay activa
+   */
   getCurrentSession() {
     const session = localStorage.getItem(this.STORAGE_KEYS.USER_SESSION);
     return session ? JSON.parse(session) : null;

@@ -1,8 +1,41 @@
+/**
+ * ===============================================
+ * MÓDULO DE AUTENTICACIÓN - AuthManager
+ * ===============================================
+ * 
+ * Descripción:
+ *   Gestor de autenticación y control de permisos.
+ *   Valida credenciales, mantiene sesiones activas
+ *   y verifica permisos según el rol del usuario.
+ * 
+ * Roles Disponibles:
+ *   - Administrador: acceso completo, gestión de usuarios
+ *   - Usuario: acceso básico, solo sus propias tareas
+ * 
+ * Funcionalidades:
+ *   - Login y logout de usuarios
+ *   - Validación de credenciales
+ *   - Gestión de sesión actual
+ *   - Control de permisos basado en roles
+ *   - Cambio de contraseña
+ *   - Obtención de información de usuario completa
+ * 
+ * Permisos Controlados:
+ *   - Ver todas las tareas (solo admin)
+ *   - Editar/eliminar tareas de otros (solo admin)
+ *   - Gestionar usuarios (solo admin)
+ *   - Generar reportes (solo admin)
+ *   - Crear/editar/eliminar sus propias tareas (todos)
+ */
 
 class AuthManager {
   constructor() {
     this.currentUser = storage.getCurrentSession();
 
+    /**
+     * Matriz de permisos por rol
+     * Define qué acciones puede realizar cada tipo de usuario
+     */
     this.ROLES_PERMISOS = {
       'Administrador': {
         ver_todas_tareas: true,
@@ -32,6 +65,14 @@ class AuthManager {
   }
 
 
+  /**
+   * login(username, password)
+   * Autentica un usuario validando credenciales
+   * @param {string} username - Nombre de usuario
+   * @param {string} password - Contraseña
+   * @returns {boolean} - true si auth es exitosa
+   * @throws {Error} - Si credenciales son inválidas
+   */
   login(username, password) {
     try {
       if (!username || !password) {
@@ -66,6 +107,12 @@ class AuthManager {
     return this.currentUser?.role || null;
   }
 
+  /**
+   * hasPermiso(permiso)
+   * Verifica si el usuario tiene un permiso específico
+   * @param {string} permiso - Nombre del permiso a verificar
+   * @returns {boolean} - true si tiene el permiso
+   */
   hasPermiso(permiso) {
     if (!this.isAuthenticated()) {
       return false;
@@ -81,13 +128,21 @@ class AuthManager {
     return permisos[permiso] === true;
   }
 
+  /**
+   * canEditarTarea(tareaUserId)
+   * Verifica si el usuario puede editar una tarea específica
+   * @param {number} tareaUserId - ID del usuario propietario de la tarea
+   * @returns {boolean} - true si puede editar
+   */
   canEditarTarea(tareaUserId) {
     const currentUserId = this.currentUser?.userId;
 
+    // Admin puede editar cualquier tarea
     if (this.hasPermiso('editar_tareas_otros')) {
       return true;
     }
 
+    // Usuarios solo pueden editar sus propias tareas
     return currentUserId === tareaUserId;
   }
 
@@ -131,6 +186,11 @@ class AuthManager {
   }
 
 
+  /**
+   * getPermisos()
+   * Obtiene la matriz de permisos para el rol actual
+   * @returns {Object} - Objeto con permisos del rol
+   */
   getPermisos() {
     if (!this.isAuthenticated()) {
       return null;
@@ -140,14 +200,22 @@ class AuthManager {
     return this.ROLES_PERMISOS[role] || {};
   }
 
+  /**
+   * getFullUserInfo()
+   * Obtiene información completa del usuario incluyendo estadísticas y permisos
+   * @returns {Object|null} - Información completa del usuario o null
+   */
   getFullUserInfo() {
     if (!this.isAuthenticated()) {
       return null;
     }
 
+    // Obtiene datos del usuario
     const usuario = storage.getUsuarioById(this.currentUser.userId);
+    // Obtiene estadísticas de tareas
     const stats = storage.getEstadisticasUsuario(this.currentUser.userId);
 
+    // Retorna información consolidada
     return {
       ...this.currentUser,
       ...stats,
@@ -155,9 +223,19 @@ class AuthManager {
     };
   }
 
+  /**
+   * validateCredentials(username, password)
+   * Valida credenciales sin hacer login
+   * Útil para verificar datos sin crear sesión
+   * @param {string} username - Nombre de usuario
+   * @param {string} password - Contraseña
+   * @returns {boolean} - true si credenciales son válidas
+   */
   validateCredentials(username, password) {
     try {
+      // Busca el usuario
       const usuario = storage.getUsuarioByUsername(username);
+      // Compara contraseña
       if (!usuario || usuario.password !== password) {
         return false;
       }
@@ -167,16 +245,27 @@ class AuthManager {
     }
   }
 
+  /**
+   * changePassword(newPassword)
+   * Cambia la contraseña del usuario autenticado actual
+   * @param {string} newPassword - Nueva contraseña
+   * @returns {boolean} - true si se cambió exitosamente
+   * @throws {Error} - Si no está autenticado
+   */
   changePassword(newPassword) {
     if (!this.isAuthenticated()) {
       throw new Error('Debes estar autenticado');
     }
 
+    // Obtiene todos los usuarios
     const usuarios = storage.getAllUsuarios();
+    // Busca el índice del usuario actual
     const index = usuarios.findIndex(u => u.id === this.currentUser.userId);
 
     if (index !== -1) {
+      // Actualiza la contraseña
       usuarios[index].password = newPassword;
+      // Persiste el cambio
       localStorage.setItem(storage.STORAGE_KEYS.USUARIOS, JSON.stringify(usuarios));
       return true;
     }

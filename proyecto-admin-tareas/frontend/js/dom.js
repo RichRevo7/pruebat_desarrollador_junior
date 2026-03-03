@@ -1,5 +1,38 @@
+/**
+ * ===============================================
+ * MÓDULO DE MANIPULACIÓN DEL DOM - DOMManager
+ * ===============================================
+ * 
+ * Descripción:
+ *   Gestor de la interfaz de usuario.
+ *   Maneja toda la interacción con el DOM,
+ *   renderizado de componentes y cambios visuales.
+ * 
+ * Funcionalidades:
+ *   - Mostrar/ocultar pantallas (login vs app)
+ *   - Cambio de vistas (dashboard, tareas, usuarios)
+ *   - Renderizado de listas y tablas
+ *   - Gestión de formularios
+ *   - Notificaciones y alertas
+ *   - Actualización de información de usuario
+ *   - Filtrado y búsqueda en tiempo real
+ *   - Manejo de modales
+ *   - Validación de formularios
+ * 
+ * Componentes Manejados:
+ *   - Login form
+ *   - Task form (crear/editar)
+ *   - Tasks list/table
+ *   - Users table
+ *   - Dashboard
+ *   - Navigation menu
+ *   - Notifications
+ *   - Modals
+ */
+
 class DOMManager {
   constructor() {
+    // ====== ELEMENTOS DE AUTENTICACIÓN ======
     this.loginSection = document.getElementById('login-section');
     this.appContainer = document.getElementById('app-container');
     this.loginForm = document.getElementById('login-form');
@@ -27,16 +60,31 @@ class DOMManager {
     this.searchTasks = document.getElementById('search-tasks');
   }
 
+  /**
+   * showLoginScreen()
+   * Muestra la pantalla de inicio de sesión
+   * Oculta la aplicación principal
+   */
   showLoginScreen() {
     this.loginSection.style.display = 'flex';
     this.appContainer.style.display = 'none';
   }
 
+  /**
+   * showApp()
+   * Muestra la aplicación principal
+   * Oculta la pantalla de login
+   */
   showApp() {
     this.loginSection.style.display = 'none';
     this.appContainer.style.display = 'flex';
   }
 
+  /**
+   * switchView(viewId)
+   * Cambia la vista activa en la aplicación
+   * @param {string} viewId - ID de la vista a mostrar
+   */
   switchView(viewId) {
     this.viewSections.forEach(view => view.classList.remove('active'));
 
@@ -51,17 +99,29 @@ class DOMManager {
     }
   }
 
+  /**
+   * createTaskCard(tarea, usuario, showUser)
+   * Crea una tarjeta visual para mostrar una tarea
+   * @param {Object} tarea - Objeto de la tarea
+   * @param {Object} usuario - Objeto del usuario propietario
+   * @param {boolean} showUser - Si mostrar nombre del usuario
+   * @returns {HTMLElement} - Elemento de la tarjeta
+   */
   createTaskCard(tarea, usuario, showUser = false) {
+    // Calcula si la tarea está vencida
     const now = new Date();
     const dueDate = new Date(tarea.due_date);
     const isOverdue = tarea.status === 'Pendiente' && dueDate < now;
+    // Calcula días hasta vencimiento
     const daysUntilDue = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
 
+    // Crear elemento contenedor
     const card = document.createElement('div');
     card.className = `task-card status-${tarea.status.toLowerCase()}`;
     if (isOverdue) card.classList.add('overdue');
     card.dataset.taskId = tarea.id;
 
+    // Formatea la fecha con formato local
     const dueDateFormatted = new Date(tarea.due_date).toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'short',
@@ -70,6 +130,7 @@ class DOMManager {
       minute: '2-digit'
     });
 
+    // Construye HTML de la tarjeta
     let taskHTML = `
       <div class="task-header">
         <div class="task-title">${this.escapeHTML(tarea.title)}</div>
@@ -106,9 +167,15 @@ class DOMManager {
     return card;
   }
 
+  /**
+   * renderUserTasks(tareas)
+   * Renderiza las tareas del usuario en formato de tarjetas
+   * @param {Array} tareas - Array de tareas a mostrar
+   */
   renderUserTasks(tareas) {
     this.tasksList.innerHTML = '';
 
+    // Si no hay tareas, muestra mensaje
     if (tareas.length === 0) {
       document.getElementById('no-tasks-message').style.display = 'block';
       return;
@@ -116,6 +183,7 @@ class DOMManager {
 
     document.getElementById('no-tasks-message').style.display = 'none';
 
+    // Crea y agrega una tarjeta por cada tarea
     tareas.forEach(tarea => {
       const usuario = storage.getUsuarioById(tarea.user_id);
       const card = this.createTaskCard(tarea, usuario, false);
@@ -123,13 +191,20 @@ class DOMManager {
     });
   }
 
+  /**
+   * renderAdminTasksTable(tareas)
+   * Renderiza todas las tareas en una tabla (vista admin)
+   * @param {Array} tareas - Array de tareas a mostrar
+   */
   renderAdminTasksTable(tareas) {
     const tbody = this.tasksTable.querySelector('tbody');
     tbody.innerHTML = '';
 
+    // Itera sobre cada tarea y crea una fila en la tabla
     tareas.forEach(tarea => {
       const usuario = storage.getUsuarioById(tarea.user_id);
       const dueDate = new Date(tarea.due_date);
+      // Marca si la tarea está vencida y pendiente
       const isOverdue = tarea.status === 'Pendiente' && dueDate < new Date();
 
       const row = document.createElement('tr');
@@ -162,11 +237,19 @@ class DOMManager {
     });
   }
 
+  /**
+   * renderUsersTable(usuarios)
+   * Renderiza todos los usuarios en una tabla (vista admin)
+   * Muestra información y acciones para cada usuario
+   * @param {Array} usuarios - Array de usuarios a mostrar
+   */
   renderUsersTable(usuarios) {
     const tbody = this.usersTable.querySelector('tbody');
     tbody.innerHTML = '';
 
+    // Itera sobre cada usuario y crea una fila
     usuarios.forEach(usuario => {
+      // Obtiene estadísticas del usuario
       const stats = storage.getEstadisticasUsuario(usuario.id);
 
       const row = document.createElement('tr');

@@ -1,3 +1,41 @@
+/*
+  ================================================================
+  ESQUEMA DE BASE DE DATOS - SISTEMA DE GESTIÓN DE TAREAS
+  ================================================================
+  
+  Descripción:
+    Esquema SQL que define la estructura de la base de datos
+    para el sistema de gestión de tareas con soporte para
+    múltiples usuarios y roles.
+  
+  Entidades:
+    1. USUARIOS
+       - Almacena información de autenticación
+       - Define roles (Administrador, Usuario)
+       - Registra fecha de creación
+    
+    2. TAREAS
+       - Almacena tareas del sistema
+       - Vinculadas a un usuario (propietario)
+       - Estados: Pendiente, Completada
+       - Fechas de creación y vencimiento
+  
+  Relaciones:
+    - Tareas tiene FK a Usuarios (user_id)
+    - Eliminación en cascada: al borrar usuario, se borran sus tareas
+  
+  Índices:
+    - username: búsqueda rápida de usuarios
+    - user_id: filtrado de tareas por usuario
+    - status: filtrado de tareas por estado
+    - due_date: ordenamiento de tareas por vencimiento
+  
+  Usuarios de Prueba:
+    - admin / admin123 (Administrador)
+    - juan_perez / password123 (Usuario)
+    - maria_garcia / password456 (Usuario)
+  ================================================================
+*/
 
 DROP TABLE IF EXISTS tareas;
 DROP TABLE IF EXISTS usuarios;

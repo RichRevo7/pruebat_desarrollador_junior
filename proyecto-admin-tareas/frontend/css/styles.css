@@ -1,10 +1,37 @@
-/* ================================================================
-   SISTEMA DE GESTIÓN DE TAREAS - CSS MODERNO PROFESIONAL
-   Diseño Corporativo | Mobile First | Minimalista
-   ================================================================ */
+/*
+  ================================================================
+  SISTEMA DE GESTIÓN DE TAREAS - ESTILOS CSS
+  ================================================================
+  
+  Descripción:
+    Estilos modernos y profesionales para la aplicación.
+    Utiliza un sistema de diseño consistente con variables CSS.
+    Diseño Mobile First, responsive en todos los tamaños.
+  
+  Características:
+    - Sistema de variables CSS para fácil personalización
+    - Paleta de colores profesional
+    - Tipografía moderna y legible
+    - Diseño Flexbox y Grid
+    - Animaciones suaves
+    - Modo oscuro compatible
+    - Accesibilidad WCAG
+  
+  Estructura:
+    1. Variables de diseño (colores, espaciado, tipografía)
+    2. Reset y estilos base
+    3. Componentes reutilizables (botones, formularios, tablas)
+    4. Layouts (navbar, sidebar, main)
+    5. Vistas específicas
+    6. Utilidades y estados
+    7. Media queries (responsive)
+  ================================================================
+*/
 
 /* ========================================
    SISTEMA DE DISEÑO - VARIABLES
+   Sistema de constantes para consistencia
+   en color, espaciado y tipografía
    ======================================== */
 :root {
   /* PALETA DE COLORES - MODERNA Y PROFESIONAL */
