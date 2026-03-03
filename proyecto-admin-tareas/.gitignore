@@ -1,0 +1,67 @@
+# ================================================================
+#  .gitignore - Sistema de Gestión de Tareas
+# ================================================================
+
+# Node modules (si decides usar Node en el futuro)
+node_modules/
+npm-debug.log
+package-lock.json
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Archivos temporales
+*.tmp
+*.log
+.env
+.env.local
+
+# Sistema operativo
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Carpetas de compilación/build
+dist/
+build/
+.cache/
+
+# Archivos de backup
+*.bak
+*.backup
+*~
+
+# Aunque estoy usando localStorage, ignora si alguien agrega BD:
+config.db
+*.sqlite
+*.sqlite3
+
+# Archivos de tests (si se agregan)
+coverage/
+.nyc_output/
+
+# Archivos del sistema
+.env
+.env.local
+.env.*.local
+
+# IDE específicos
+.vscode
+.idea
+.sublime-project
+.sublime-workspace
+
+# OS specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+desktop.ini
